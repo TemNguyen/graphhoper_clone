@@ -16,6 +16,7 @@ import gnu.trove.set.hash.TIntHashSet;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
@@ -34,15 +35,16 @@ public class DataUpdater {
     private static final String ROAD_DATA_URL = "http://www.stadt-koeln.de/externe-dienste/open-data/traffic.php";
     @Inject
     private GraphHopper hopper;
-
     @Inject
     private ObjectMapper objectMapper;
 
     private final OkHttpClient client;
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final Lock writeLock;
-    private final long seconds = 150;
+    private final long seconds = 30;
     private RoadData currentRoads;
+
+    private boolean state = true;
 
     public DataUpdater(Lock writeLock) {
         this.writeLock = writeLock;
@@ -70,10 +72,10 @@ public class DataUpdater {
         for (RoadEntry entry : data) {
 
             // TODO get more than one point -> our map matching component
-            Point point = entry.getPoints().get(entry.getPoints().size() / 2);
-            QueryResult qr = locationIndex.findClosest(point.lat, point.lon, EdgeFilter.ALL_EDGES);
+            RoadPoint point = entry.getPoints().get(entry.getPoints().size() / 2);
+            QueryResult qr = locationIndex.findClosest(point.getLatitude(), point.getLongitude(), EdgeFilter.ALL_EDGES);
             if (!qr.isValid()) {
-                // logger.info("no matching road found for entry " + entry.getId() + " at " + point);
+                logger.info("no matching road found for entry " + entry.getId() + " at " + point);
                 errors++;
                 continue;
             }
@@ -95,7 +97,9 @@ public class DataUpdater {
                         updates++;
                         // TODO use different speed for the different directions (see e.g. Bike2WeightFlagEncoder)
                         logger.info("Speed change at " + entry.getId() + " (" + point + "). Old: " + oldSpeed + ", new:" + value);
-                        edge.setFlags(carEncoder.setSpeed(edge.getFlags(), value));
+                        long returnValue = carEncoder.setSpeed(edge.getFlags(), value);
+                        logger.info(returnValue + "");
+                        edge.setFlags(returnValue);
                     }
                 } else {
                     throw new IllegalStateException("currently no other value type than 'speed' is supported");
@@ -118,41 +122,55 @@ public class DataUpdater {
         final OpenTrafficData trafficData = objectMapper.readValue(trafficJsonString, OpenTrafficData.class);
         RoadData data = new RoadData();
 
-        for (final TrafficFeature trafficFeature : trafficData.features) {
-            final String idStr = trafficFeature.attributes.identifier;
-            final int streetUsage = trafficFeature.attributes.auslastung;
-
-            // according to the docs http://www.offenedaten-koeln.de/dataset/verkehrskalender-der-stadt-k%C3%B6ln
-            // there are only three indications 0='ok', 1='slow' and 2='traffic jam'
-            if (streetUsage != 0 && streetUsage != 1 && streetUsage != 2) {
-                continue;
-            }
-
-            final double speed;
-            if (streetUsage == 1) {
-                speed = 20;
-            } else if (streetUsage == 2) {
-                speed = 5;
-            } else {
-                // If there is a traffic jam we need to revert afterwards!
-                speed = 45; // TODO getOldSpeed();
-            }
-
-            final List<List<List<Double>>> paths = trafficFeature.geometry.paths;
-            for (int pathPointIndex = 0; pathPointIndex < paths.size(); pathPointIndex++) {
-                final List<Point> points = new ArrayList<>();
-                final List<List<Double>> path = paths.get(pathPointIndex);
-                for (int pointIndex = 0; pointIndex < path.size(); pointIndex++) {
-                    final List<Double> point = path.get(pointIndex);
-                    points.add(new Point(point.get(1), point.get(0)));
-                }
-
-                if (!points.isEmpty()) {
-                    data.add(new RoadEntry(idStr + "_" + pathPointIndex, points, speed, "speed", "replace"));
-                }
-            }
-
-        }
+//        for (final TrafficFeature trafficFeature : trafficData.features) {
+//            final String idStr = trafficFeature.attributes.identifier;
+//             int streetUsage = trafficFeature.attributes.auslastung;
+//
+//            // according to the docs http://www.offenedaten-koeln.de/dataset/verkehrskalender-der-stadt-k%C3%B6ln
+//            // there are only three indications 0='ok', 1='slow' and 2='traffic jam'
+//            if (streetUsage != 0 && streetUsage != 1 && streetUsage != 2) {
+//                continue;
+//            }
+//
+//            Random rd = new Random();
+//            streetUsage = rd.nextInt(3);
+//
+//            final double speed;
+//            if (streetUsage == 1) {
+//                speed = 20;
+//            } else if (streetUsage == 2) {
+//                speed = 10;
+//            } else {
+//                // If there is a traffic jam we need to revert afterwards!
+//                speed = 100; // TODO getOldSpeed();
+//            }
+//
+//            final List<List<List<Double>>> paths = trafficFeature.geometry.paths;
+//            for (int pathPointIndex = 0; pathPointIndex < paths.size(); pathPointIndex++) {
+//                final List<RoadPoint> points = new ArrayList<>();
+//                final List<List<Double>> path = paths.get(pathPointIndex);
+//                for (int pointIndex = 0; pointIndex < path.size(); pointIndex++) {
+//                    final List<Double> point = path.get(pointIndex);
+//                    points.add(new RoadPoint(point.get(1), point.get(0)));
+//                }
+//
+//                if (!points.isEmpty()) {
+//                    data.add(new RoadEntry(idStr + "_" + pathPointIndex, points, speed, "speed", "replace"));
+//                }
+//            }
+//
+//        }
+//        state = !state;
+//        List<RoadPoint> t1 = new ArrayList<>();
+//        t1.add(new RoadPoint(50.90604359335094,6.965707540512085));
+//        t1.add(new RoadPoint(50.90561736243844,6.965857744216919));
+//        if (state) {
+//            data.add(new RoadEntry("test1", t1, 1, "speed", "replace"));
+//            System.out.println("Blocked!");
+//        } else {
+//            data.add(new RoadEntry("test1", t1, 100, "speed", "replace"));
+//            System.out.println("UnBlocked!");
+//        }
 
         return data;
     }
@@ -217,10 +235,10 @@ public class DataUpdater {
 
     @JsonIgnoreProperties(ignoreUnknown=true)
     private static class TrafficAttributes {
-        @JsonProperty("IDENTIFIER")
+        @JsonProperty("identifier")
         public String identifier;
 
-        @JsonProperty("AUSLASTUNG")
+        @JsonProperty("auslastung")
         public Integer auslastung;
     }
 

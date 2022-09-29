@@ -72,6 +72,10 @@ public class DemoServer {
 
                         serve("/roads*").with(RoadsServlet.class);
                         bind(RoadsServlet.class).in(Singleton.class);
+
+//                        serve("/ban*").with(RoadBannerByTimeServlet.class);
+//                        bind(RoadBannerByTimeServlet.class).in(Singleton.class);
+
                     }
                 });
 

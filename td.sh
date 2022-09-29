@@ -1,6 +1,6 @@
 #!/bin/bash
 
-JAR=$(ls target/traffic-demo-*-web-assembly.jar)
+# JAR=$(ls target/traffic-demo-*-web-assembly.jar)
 
 if [ "$JAVA" = "" ]; then
  JAVA=java

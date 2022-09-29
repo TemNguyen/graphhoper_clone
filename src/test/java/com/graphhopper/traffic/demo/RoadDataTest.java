@@ -30,7 +30,7 @@ public class RoadDataTest {
     @Test
     public void testWriteToFile() throws IOException {
         RoadData data = new RoadData();
-        data.add(new RoadEntry("1", Arrays.asList(new Point(42.4, 11.1)), 2, "speed", "replace"));
+        data.add(new RoadEntry("1", Arrays.asList(new RoadPoint(42.4, 11.1)), 2, "speed", "replace", ""));
         StringWriter sWriter = new StringWriter();
         mapper.writeValue(sWriter, data);
         assertEquals("[{\"points\":[[11.1,42.4]],\"value\":2.0,\"value_type\":\"speed\",\"mode\":\"replace\",\"id\":\"1\"}]", sWriter.toString());
