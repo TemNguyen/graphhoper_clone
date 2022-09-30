@@ -83,6 +83,7 @@ public class DataUpdater {
             int edgeId = qr.getClosestEdge().getEdge();
             if (edgeIds.contains(edgeId)) {
                 // TODO this wouldn't happen with our map matching component
+                logger.info("Can not find matching ID");
                 errors++;
                 continue;
             }
@@ -98,7 +99,6 @@ public class DataUpdater {
                         // TODO use different speed for the different directions (see e.g. Bike2WeightFlagEncoder)
                         logger.info("Speed change at " + entry.getId() + " (" + point + "). Old: " + oldSpeed + ", new:" + value);
                         long returnValue = carEncoder.setSpeed(edge.getFlags(), value);
-                        logger.info(returnValue + "");
                         edge.setFlags(returnValue);
                     }
                 } else {
@@ -160,18 +160,6 @@ public class DataUpdater {
 //            }
 //
 //        }
-//        state = !state;
-//        List<RoadPoint> t1 = new ArrayList<>();
-//        t1.add(new RoadPoint(50.90604359335094,6.965707540512085));
-//        t1.add(new RoadPoint(50.90561736243844,6.965857744216919));
-//        if (state) {
-//            data.add(new RoadEntry("test1", t1, 1, "speed", "replace"));
-//            System.out.println("Blocked!");
-//        } else {
-//            data.add(new RoadEntry("test1", t1, 100, "speed", "replace"));
-//            System.out.println("UnBlocked!");
-//        }
-
         return data;
     }
 
