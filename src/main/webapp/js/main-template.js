@@ -283,7 +283,6 @@ function checkInput() {
     // console.log("## new checkInput");
     for (var i = 0; i < len; i++) {
         var div = $('#locationpoints > div.pointDiv').eq(i);
-        // console.log(div.length + ", index:" + i + ", len:" + len);
         if (div.length === 0) {
             $('#locationpoints > div.pointAdd').before(translate.nanoTemplate(template, {id: i}));
             div = $('#locationpoints > div.pointDiv').eq(i);
@@ -602,6 +601,7 @@ function mySubmit() {
             allStr = [],
             inputOk = true;
     var location_points = $("#locationpoints > div.pointDiv > input.pointInput");
+    var time_arrive = $("#timeArriveInput").val();
     var len = location_points.size();
     $.each(location_points, function (index) {
         if (index === 0) {
