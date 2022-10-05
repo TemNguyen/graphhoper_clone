@@ -90,6 +90,7 @@ public class DataUpdater {
 
             edgeIds.add(edgeId);
             EdgeIteratorState edge = graph.getEdgeIteratorState(edgeId, Integer.MIN_VALUE);
+            logger.info(edge.getName());
             double value = entry.getValue();
             if ("replace".equalsIgnoreCase(entry.getMode())) {
                 if ("speed".equalsIgnoreCase(entry.getValueType())) {

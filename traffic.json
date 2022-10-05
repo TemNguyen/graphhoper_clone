@@ -11,43 +11,9 @@
                 "longitude": 6.965965032577515
             }
         ],
-        "value": 1,
+        "value": 1000,
         "valueType": "speed",
         "mode": "REPLACE",
-        "time": "11:53:00"
-    },
-    {
-        "id": "2",
-        "points": [
-            {
-                "latitude": 50.906483351313256,
-                "longitude": 6.967054009437561
-            },
-            {
-                "latitude": 50.905728994721294,
-                "longitude": 6.967434883117676
-            }
-        ],
-        "value": 1,
-        "valueType": "speed",
-        "mode": "REPLACE",
-        "time": "11:53:30"
-    },
-    {
-        "id": "1",
-        "points": [
-            {
-                "latitude": 50.906226262547385,
-                "longitude": 6.965632438659668
-            },
-            {
-                "latitude": 50.90537041734656,
-                "longitude": 6.965965032577515
-            }
-        ],
-        "value": 100,
-        "valueType": "speed",
-        "mode": "REPLACE",
-        "time": "11:54:00"
+        "time": "15:36:00"
     }
 ]

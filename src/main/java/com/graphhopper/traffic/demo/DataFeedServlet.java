@@ -50,14 +50,14 @@ public class DataFeedServlet extends GraphHopperServlet {
                 } else {
                     Timer timer = new Timer();
                     Calendar date = Calendar.getInstance();
-                    date.set(Calendar.HOUR, Integer.parseInt(timeData[0]) > 11 ? Integer.parseInt(timeData[0]) - 12 : Integer.parseInt(timeData[0]));
+                    date.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeData[0]));
                     date.set(Calendar.MINUTE, Integer.parseInt(timeData[1]));
                     date.set(Calendar.SECOND, Integer.parseInt(timeData[2]));
 
-                    logger.info("" + date.getTime());
                     timer.scheduleAtFixedRate(new MyTimerTask(thread), date.getTime(), 1000 * 60 * 60 * 24);
                 }
             } catch (Exception e) {
+                logger.info(e.toString());
                 updater.feed(r);
             }
         }
