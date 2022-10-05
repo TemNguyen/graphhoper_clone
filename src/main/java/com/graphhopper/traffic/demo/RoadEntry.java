@@ -9,24 +9,35 @@ import java.util.List;
  * @author Peter Karich
  */
 public class RoadEntry {
+    public enum DAYOFWEEK {
+        ITEM,
+        ITEM2,
+        MONDAY,
+        TUESDAY,
+        WEDNESDAY,
+        THURSDAY,
+        FRIDAY,
+        SATURDAY,
+        SUNDAY
+    }
     private List<RoadPoint> points;
     private double value;
     private String valueType;
     private String mode;
     private String id;
-
     private String time;
-
+    private List<DAYOFWEEK> dayOfWeeks;
     public RoadEntry() {
     }
 
-    public RoadEntry(String id, List<RoadPoint> points, double value, String valueType, String mode, String time) {
+    public RoadEntry(String id, List<RoadPoint> points, double value, String valueType, String mode, String time, List<DAYOFWEEK> dayOfWeeks) {
         this.points = points;
         this.value = value;
         this.valueType = valueType;
         this.mode = mode;
         this.id = id;
         this.time = time;
+        this.dayOfWeeks = dayOfWeeks;
     }
 
     public String getId() {
@@ -81,6 +92,14 @@ public class RoadEntry {
 
     public void setMode(String mode) {
         this.mode = mode;
+    }
+
+    public List<DAYOFWEEK> getDayOfWeeks() {
+        return dayOfWeeks;
+    }
+
+    public void setDayOfWeeks(List<DAYOFWEEK> dayOfWeeks) {
+        this.dayOfWeeks = dayOfWeeks;
     }
 
     @Override
