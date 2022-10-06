@@ -40,27 +40,28 @@ public class DataFeedServlet extends GraphHopperServlet {
             RoadData r = new RoadData();
             r.add(road);
             try {
-                if (road.getTime() == "") {
-                    updater.feed(r);
-                }
+                if (road.getTime() == "") updater.feed(r);
 
-                ArrayList<RoadEntry.DAYOFWEEK> dayOfWeeks = new ArrayList<>(road.getDayOfWeeks());
+                ArrayList<RoadEntry.DAYOFWEEK> dayOfWeeks = new ArrayList<>();
 
                 String time = road.getTime();
-                LocalTime requestTime = LocalTime.parse(time);
-                String[] timeData = time.split(":");
+                if (road.getDayOfWeeks() != null) dayOfWeeks = new ArrayList<>(road.getDayOfWeeks());
+                String[] timeData = time.split(" - ");
+                LocalTime requestTime = LocalTime.parse(timeData[0]);
+                // validate
+                String[] beginTime = timeData[0].split(":");
+                String[] endTime = timeData[1].split(":");
                 Thread thread = new Thread(() -> updater.feed(r));
 
-                if (requestTime.compareTo(LocalTime.now()) <= 0) {
-                    updater.feed(r);
-                } else {
+                if (!scheduleForSomeDayInWeek(r,dayOfWeeks, beginTime, endTime, thread)) {
+                    //ban daily
+                    if (requestTime.compareTo(LocalTime.now()) <= 0) updater.feed(r);
+
                     Timer timer = new Timer();
                     Calendar date = Calendar.getInstance();
-                    date.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeData[0]));
-                    date.set(Calendar.MINUTE, Integer.parseInt(timeData[1]));
-                    date.set(Calendar.SECOND, Integer.parseInt(timeData[2]));
-
-                    timer.scheduleAtFixedRate(new MyTimerTask(thread), date.getTime(), 1000 * 60 * 60 * 24);
+                    scheduleBanRoad(timer, date, thread, beginTime, 1000 * 24 * 60 * 60);
+                    // get old value end re-update route
+                    scheduleBanRoad(timer, date, thread, endTime, 1000 * 24 * 60 * 60);
                 }
             } catch (Exception e) {
                 logger.info(e.toString());
@@ -69,7 +70,8 @@ public class DataFeedServlet extends GraphHopperServlet {
         }
     }
 
-    private boolean scheduleForSomeDayInWeek(RoadData r, ArrayList<RoadEntry.DAYOFWEEK> dayOfWeeks, String time) {
+    private boolean scheduleForSomeDayInWeek(RoadData r, ArrayList<RoadEntry.DAYOFWEEK> dayOfWeeks,
+                                             String[] beginTime, String[] endTime, Thread thread) {
         if (dayOfWeeks == null || dayOfWeeks.size() == 0)
             return false;
 
@@ -77,15 +79,19 @@ public class DataFeedServlet extends GraphHopperServlet {
         Calendar date = Calendar.getInstance();
         for (RoadEntry.DAYOFWEEK d: dayOfWeeks) {
             date.set(Calendar.DATE, d.ordinal());
-            String[] timeData = time.split(":");
-            date.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeData[0]));
-            date.set(Calendar.MINUTE, Integer.parseInt(timeData[1]));
-            date.set(Calendar.SECOND, Integer.parseInt(timeData[2]));
-            Thread thread = new Thread(() -> updater.feed(r));
-            timer.scheduleAtFixedRate(new MyTimerTask(thread), date.getTime(), 7 * 1000 * 60 * 60 * 24);
+            scheduleBanRoad(timer, date, thread, beginTime, 7 * 1000 * 24 * 60 * 60);
+            // get old value end re-update route
+            scheduleBanRoad(timer, date, thread, endTime, 7 * 1000 * 24 * 60 * 60);
         }
 
         return true;
+    }
+    private void scheduleBanRoad(Timer timer, Calendar calendar, Thread thread, String[] timeData, long period) {
+        calendar.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeData[0]));
+        calendar.set(Calendar.MINUTE, Integer.parseInt(timeData[1]));
+        calendar.set(Calendar.SECOND, Integer.parseInt(timeData[2]));
+        logger.info(calendar.getTime().toString());
+        timer.scheduleAtFixedRate(new MyTimerTask(thread), calendar.getTime(), period);
     }
 }
 
