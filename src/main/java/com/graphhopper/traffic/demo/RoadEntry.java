@@ -18,7 +18,7 @@ public class RoadEntry {
         THURSDAY,
         FRIDAY,
         SATURDAY,
-        SUNDAY
+        SUNDAY,
     }
     private List<RoadPoint> points;
     private double value;

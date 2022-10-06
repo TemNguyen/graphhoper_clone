@@ -14,6 +14,9 @@
         "value": 0,
         "valueType": "speed",
         "mode": "REPLACE",
-        "time": "11:16:00 - 11:18:30"
+        "time": "14:20:00 - 14:20:30",
+        "dayOfWeeks": [
+            6
+        ]
     }
 ]

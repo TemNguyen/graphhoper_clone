@@ -45,23 +45,25 @@ public class DataFeedServlet extends GraphHopperServlet {
                 ArrayList<RoadEntry.DAYOFWEEK> dayOfWeeks = new ArrayList<>();
 
                 String time = road.getTime();
-                if (road.getDayOfWeeks() != null) dayOfWeeks = new ArrayList<>(road.getDayOfWeeks());
+                if (road.getDayOfWeeks() != null)
+                    dayOfWeeks = new ArrayList<>(road.getDayOfWeeks());
                 String[] timeData = time.split(" - ");
                 LocalTime requestTime = LocalTime.parse(timeData[0]);
                 // validate
                 String[] beginTime = timeData[0].split(":");
                 String[] endTime = timeData[1].split(":");
                 Thread thread = new Thread(() -> updater.feed(r));
-
-                if (!scheduleForSomeDayInWeek(r,dayOfWeeks, beginTime, endTime, thread)) {
+                if (!scheduleForSomeDayInWeek(r,dayOfWeeks, beginTime, endTime)) {
                     //ban daily
-                    if (requestTime.compareTo(LocalTime.now()) <= 0) updater.feed(r);
+                    if (requestTime.compareTo(LocalTime.now()) <= 0)
+                        updater.feed(r);
 
                     Timer timer = new Timer();
                     Calendar date = Calendar.getInstance();
                     scheduleBanRoad(timer, date, thread, beginTime, 1000 * 24 * 60 * 60);
                     // get old value end re-update route
-                    scheduleBanRoad(timer, date, thread, endTime, 1000 * 24 * 60 * 60);
+                    Thread restoreThread = new Thread(() -> updater.feed(r));
+                    scheduleBanRoad(timer, date, restoreThread, endTime, 1000 * 24 * 60 * 60);
                 }
             } catch (Exception e) {
                 logger.info(e.toString());
@@ -71,17 +73,19 @@ public class DataFeedServlet extends GraphHopperServlet {
     }
 
     private boolean scheduleForSomeDayInWeek(RoadData r, ArrayList<RoadEntry.DAYOFWEEK> dayOfWeeks,
-                                             String[] beginTime, String[] endTime, Thread thread) {
+                                             String[] beginTime, String[] endTime) {
         if (dayOfWeeks == null || dayOfWeeks.size() == 0)
             return false;
 
         Timer timer = new Timer();
         Calendar date = Calendar.getInstance();
         for (RoadEntry.DAYOFWEEK d: dayOfWeeks) {
-            date.set(Calendar.DATE, d.ordinal());
+            date.set(Calendar.DAY_OF_WEEK, d.ordinal());
+            Thread thread = new Thread(() -> updater.feed(r));
             scheduleBanRoad(timer, date, thread, beginTime, 7 * 1000 * 24 * 60 * 60);
             // get old value end re-update route
-            scheduleBanRoad(timer, date, thread, endTime, 7 * 1000 * 24 * 60 * 60);
+            Thread restoreThread = new Thread(() -> updater.feed(r));
+            scheduleBanRoad(timer, date, restoreThread, endTime, 7 * 1000 * 24 * 60 * 60);
         }
 
         return true;
@@ -90,8 +94,7 @@ public class DataFeedServlet extends GraphHopperServlet {
         calendar.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeData[0]));
         calendar.set(Calendar.MINUTE, Integer.parseInt(timeData[1]));
         calendar.set(Calendar.SECOND, Integer.parseInt(timeData[2]));
-        logger.info(calendar.getTime().toString());
-        timer.scheduleAtFixedRate(new MyTimerTask(thread), calendar.getTime(), period);
+        timer.schedule(new MyTimerTask(thread), calendar.getTime(), period);
     }
 }
 
