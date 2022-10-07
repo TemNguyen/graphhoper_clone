@@ -94,6 +94,7 @@ public class DataFeedServlet extends GraphHopperServlet {
         calendar.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeData[0]));
         calendar.set(Calendar.MINUTE, Integer.parseInt(timeData[1]));
         calendar.set(Calendar.SECOND, Integer.parseInt(timeData[2]));
+        logger.info(calendar.getTime().toString());
         timer.schedule(new MyTimerTask(thread), calendar.getTime(), period);
     }
 }

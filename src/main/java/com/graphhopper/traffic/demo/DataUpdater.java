@@ -123,44 +123,41 @@ public class DataUpdater {
         final OpenTrafficData trafficData = objectMapper.readValue(trafficJsonString, OpenTrafficData.class);
         RoadData data = new RoadData();
 
-//        for (final TrafficFeature trafficFeature : trafficData.features) {
-//            final String idStr = trafficFeature.attributes.identifier;
-//             int streetUsage = trafficFeature.attributes.auslastung;
-//
-//            // according to the docs http://www.offenedaten-koeln.de/dataset/verkehrskalender-der-stadt-k%C3%B6ln
-//            // there are only three indications 0='ok', 1='slow' and 2='traffic jam'
-//            if (streetUsage != 0 && streetUsage != 1 && streetUsage != 2) {
-//                continue;
-//            }
-//
-//            Random rd = new Random();
-//            streetUsage = rd.nextInt(3);
-//
-//            final double speed;
-//            if (streetUsage == 1) {
-//                speed = 20;
-//            } else if (streetUsage == 2) {
-//                speed = 10;
-//            } else {
-//                // If there is a traffic jam we need to revert afterwards!
-//                speed = 100; // TODO getOldSpeed();
-//            }
-//
-//            final List<List<List<Double>>> paths = trafficFeature.geometry.paths;
-//            for (int pathPointIndex = 0; pathPointIndex < paths.size(); pathPointIndex++) {
-//                final List<RoadPoint> points = new ArrayList<>();
-//                final List<List<Double>> path = paths.get(pathPointIndex);
-//                for (int pointIndex = 0; pointIndex < path.size(); pointIndex++) {
-//                    final List<Double> point = path.get(pointIndex);
-//                    points.add(new RoadPoint(point.get(1), point.get(0)));
-//                }
-//
-//                if (!points.isEmpty()) {
-//                    data.add(new RoadEntry(idStr + "_" + pathPointIndex, points, speed, "speed", "replace"));
-//                }
-//            }
-//
-//        }
+        for (final TrafficFeature trafficFeature : trafficData.features) {
+            final String idStr = trafficFeature.attributes.identifier;
+             int streetUsage = trafficFeature.attributes.auslastung;
+
+            // according to the docs http://www.offenedaten-koeln.de/dataset/verkehrskalender-der-stadt-k%C3%B6ln
+            // there are only three indications 0='ok', 1='slow' and 2='traffic jam'
+            if (streetUsage != 0 && streetUsage != 1 && streetUsage != 2) {
+                continue;
+            }
+
+            final double speed;
+            if (streetUsage == 1) {
+                speed = 20;
+            } else if (streetUsage == 2) {
+                speed = 10;
+            } else {
+                // If there is a traffic jam we need to revert afterwards!
+                speed = 100; // TODO getOldSpeed();
+            }
+
+            final List<List<List<Double>>> paths = trafficFeature.geometry.paths;
+            for (int pathPointIndex = 0; pathPointIndex < paths.size(); pathPointIndex++) {
+                final List<RoadPoint> points = new ArrayList<>();
+                final List<List<Double>> path = paths.get(pathPointIndex);
+                for (int pointIndex = 0; pointIndex < path.size(); pointIndex++) {
+                    final List<Double> point = path.get(pointIndex);
+                    points.add(new RoadPoint(point.get(1), point.get(0)));
+                }
+
+                if (!points.isEmpty()) {
+                    data.add(new RoadEntry(idStr + "_" + pathPointIndex, points, speed, "speed", "replace", "", new ArrayList<>() ));
+                }
+            }
+
+        }
         return data;
     }
 
